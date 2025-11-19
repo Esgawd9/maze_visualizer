@@ -168,6 +168,24 @@
 
             <div class="flex items-center gap-2 bg-slate-800 p-1 rounded-lg border border-slate-700">
                 <div class="relative bg-slate-900 rounded overflow-hidden border border-slate-600">
+                    <i class="fas fa-layer-group absolute left-2 top-2 text-purple-500 text-xs pointer-events-none"></i>
+                    <select id="maze-select" class="pl-8 pr-4 py-1.5 bg-slate-900 text-xs font-medium text-slate-200 focus:outline-none focus:ring-1 focus:ring-purple-500 cursor-pointer w-40 appearance-none">
+                        <option value="none" disabled selected>Generate Maze...</option>
+                        <option value="random">Random Noise</option>
+                        <option value="recursive">Recursive Division</option>
+                        <option value="vertical">Vertical Lines</option>
+                        <option value="horizontal">Horizontal Lines</option>
+                        <option value="spiral">Simple Spiral</option>
+                    </select>
+                    <i class="fas fa-chevron-down absolute right-2 top-2 text-slate-500 text-xs pointer-events-none"></i>
+                </div>
+                <button id="btn-gen-maze" class="bg-purple-600 hover:bg-purple-500 text-white text-xs px-3 py-1.5 rounded transition">
+                    Go
+                </button>
+            </div>
+
+            <div class="flex items-center gap-2 bg-slate-800 p-1 rounded-lg border border-slate-700">
+                <div class="relative bg-slate-900 rounded overflow-hidden border border-slate-600">
                     <i class="fas fa-calculator absolute left-2 top-2 text-cyan-500 text-xs pointer-events-none"></i>
                     <select id="algo-select" class="pl-8 pr-4 py-1.5 bg-slate-900 text-xs font-medium text-slate-200 focus:outline-none focus:ring-1 focus:ring-cyan-500 cursor-pointer w-40 appearance-none">
                         <option value="dijkstra">Dijkstra's Algo</option>
@@ -199,13 +217,6 @@
             </div>
         </div>
 
-        <div class="flex flex-wrap items-center gap-3 justify-center md:justify-start">
-            <div class="flex items-center gap-2">
-                <span class="text-xs text-slate-500 font-bold uppercase">Presets:</span>
-                <button onclick="generateMaze('random')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded text-xs text-slate-300 transition">Random Noise</button>
-                <button onclick="generateMaze('recursive')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded text-xs text-slate-300 transition">Recursive Division</button>
-            </div>
-        </div>
     </header>
 
     <!-- Status Bar -->
@@ -273,6 +284,8 @@
         const btnVisualize = document.getElementById('btn-visualize');
         const btnClear = document.getElementById('btn-clear');
         const algoSelect = document.getElementById('algo-select');
+        const mazeSelect = document.getElementById('maze-select');
+        const btnGenMaze = document.getElementById('btn-gen-maze');
         const speedSlider = document.getElementById('speed-slider');
         const btnDebug = document.getElementById('btn-debug');
         const debugPanel = document.getElementById('debug-panel');
@@ -389,7 +402,6 @@
             if (!isRunning) return;
             isPaused = !isPaused;
             updatePauseUI();
-            // If unpausing and stuck in await, resolve it
             if (!isPaused && resolvePause) {
                 resolvePause(); 
                 resolvePause = null;
@@ -400,11 +412,9 @@
         btnStep.addEventListener('click', () => {
             if (!isRunning) return;
             if (!isPaused) {
-                // If not paused, pausing first makes sense
                 isPaused = true;
                 updatePauseUI();
             }
-            // Resolve the wait promise once
             if (resolvePause) {
                 resolvePause();
                 resolvePause = null;
@@ -443,10 +453,7 @@
 
         /* --- ANIMATION ENGINE --- */
         function getSpeedDelay() {
-            // 1 (slow) -> 100 (fast)
             const val = parseInt(speedSlider.value);
-            // Exponential curve for better control
-            // 100 -> 0ms, 1 -> 500ms
             if(val === 100) return 0;
             return Math.floor(500 * Math.pow(1 - (val/100), 2));
         }
@@ -459,28 +466,24 @@
 
         async function animateVisited(nodes) {
             for(let i=0; i<nodes.length; i++) {
-                // 1. Check Pause State
+                if(!isRunning) return; 
+
                 if(isPaused) {
-                    updateDebugDisplay(nodes[i], i); // update UI before waiting
+                    updateDebugDisplay(nodes[i], i); 
                     await waitStep();
-                    // After resolving, we are technically still "in the step"
-                    // Loop continues to process this node
+                    if(!isRunning) return; 
                 }
 
-                // 2. Process Node
                 const n = nodes[i];
                 if(!isSpecial(n.r, n.c)) {
                     n.element.classList.add('visited');
                 }
                 updateDebugDisplay(n, i + 1);
 
-                // 3. Wait based on Speed Slider (Dynamic)
-                // Note: We wait AFTER processing to allow visual update
                 const delay = getSpeedDelay();
                 if(delay > 0) {
                      await new Promise(r => setTimeout(r, delay));
                 } else {
-                    // If speed is max, throttle slightly to prevent freezing only every few frames
                     if(i % 10 === 0) await new Promise(r => setTimeout(r, 0));
                 }
             }
@@ -494,8 +497,8 @@
                 curr = curr.cameFrom;
             }
             
-            // Path animation (standard speed, not affected by debug pause usually, but let's respect slider)
             for(let i=0; i<path.length; i++) {
+                 if(!isRunning) return; 
                  const delay = Math.max(20, getSpeedDelay()); 
                  const n = path[i];
                  if(!isSpecial(n.r, n.c)) {
@@ -520,7 +523,6 @@
                     n.element.classList.remove('visited', 'path');
                 }
             }
-            // Reset Debug UI
             isPaused = false;
             updatePauseUI();
             if(showDebug) {
@@ -538,8 +540,6 @@
             resetAlgoState();
             btnVisualize.disabled = true;
             
-            // Open debugger automatically if not open? Optional, let's leave it manual
-            // but ensure buttons are active
             btnPause.disabled = false;
             btnStep.disabled = false;
 
@@ -552,6 +552,7 @@
             else if (algo === 'dfs') visitedNodes = dfs();
 
             await animateVisited(visitedNodes);
+            if(!isRunning) return; 
 
             const endNode = grid[endPos.r][endPos.c];
             let pathFound = !!endNode.cameFrom;
@@ -559,12 +560,12 @@
 
             if (pathFound) {
                 pathLength = await animatePath();
+                if(!isRunning) return; 
                 statusText.innerHTML = `Target Reached! <span class="text-amber-400">Path Length: ${pathLength}</span>`;
             } else {
                 statusText.textContent = "No path possible.";
             }
 
-            // Final Debug Update
             if(showDebug) {
                  debugContent.innerHTML = `
                     <div class="debug-row"><span class="debug-label">Status:</span> <span class="debug-val ${pathFound ? 'text-green-400' : 'text-red-400'}">${pathFound ? 'Success' : 'Failed'}</span></div>
@@ -575,7 +576,6 @@
 
             isRunning = false;
             btnVisualize.disabled = false;
-            // Reset Pause UI just in case
             isPaused = false;
             updatePauseUI();
         }
@@ -698,37 +698,164 @@
         function manhattan(a, b) { return Math.abs(a.r - b.r) + Math.abs(a.c - b.c); }
         
         /* --- MAZE GENERATION --- */
-        function clearBoard() { initGrid(); statusText.textContent = "Board Cleared."; }
-        function generateMaze(type) {
+        function clearBoard() { 
+            isRunning = false;
+            if(isPaused && resolvePause) {
+                resolvePause();
+                resolvePause = null;
+            }
+            isPaused = false;
+            updatePauseUI();
+
+            initGrid(); 
+            btnVisualize.disabled = false;
+            statusText.textContent = "Board Cleared."; 
+            
+            if(showDebug) {
+                debugContent.innerHTML = `
+                    <div class="debug-row"><span class="debug-label">Status:</span> <span class="debug-val text-slate-200">Idle</span></div>
+                    <div class="debug-row"><span class="debug-label">Current Node:</span> <span class="debug-val">-</span></div>
+                    <div class="debug-row"><span class="debug-label">Nodes Visited:</span> <span class="debug-val">0</span></div>
+                    <div class="debug-row"><span class="debug-label">G-Score (Dist):</span> <span class="debug-val">-</span></div>
+                    <div class="debug-row"><span class="debug-label">H-Score (Heur):</span> <span class="debug-val">-</span></div>
+                    <div class="debug-row"><span class="debug-label">F-Score (Total):</span> <span class="debug-val">-</span></div>
+                `;
+            }
+        }
+
+        async function generateMaze() {
+            const type = mazeSelect.value;
+            if(type === 'none') return;
             clearBoard();
+            
             if(type === 'random') {
                 grid.flat().forEach(n => { if(Math.random() < 0.3 && !isSpecial(n.r, n.c)) { n.isWall = true; n.element.classList.add('wall'); } });
             } else if (type === 'recursive') {
-                recursiveDiv(1, ROWS-2, 1, COLS-2, false);
+                // Reverted to "Loose" recursive division (no strict parity check)
+                await recursiveDiv(1, ROWS-2, 1, COLS-2, chooseOrientation(ROWS, COLS));
+            } else if (type === 'vertical') {
+                await generateVerticalMaze();
+            } else if (type === 'horizontal') {
+                await generateHorizontalMaze();
+            } else if (type === 'spiral') {
+                await generateSpiral();
             }
         }
+        
         function isSpecial(r, c) { return (r === startPos.r && c === startPos.c) || (r === endPos.r && c === endPos.c); }
+        function addWall(r, c) {
+            if (isSpecial(r, c)) return;
+            grid[r][c].isWall = true;
+            grid[r][c].element.classList.add('wall');
+        }
+        function chooseOrientation(width, height) {
+             if(width < height) return true; 
+             else if(height < width) return false; 
+             return Math.random() < 0.5;
+        }
+
+        // --- Generators ---
+
         async function recursiveDiv(r1, r2, c1, c2, horizontal) {
-            if(horizontal) {
-                if(r2 - r1 < 2) return;
+            if (horizontal) {
+                if (r2 - r1 < 2) return;
+                // Loose logic: any random row in between
                 const y = Math.floor(Math.random() * (r2 - r1 - 1)) + r1 + 1;
                 const hole = Math.floor(Math.random() * (c2 - c1 + 1)) + c1;
-                for(let c = c1; c <= c2; c++) if(c !== hole && !isSpecial(y, c)) { grid[y][c].isWall = true; grid[y][c].element.classList.add('wall'); }
-                await recursiveDiv(r1, y-1, c1, c2, !horizontal);
-                await recursiveDiv(y+1, r2, c1, c2, !horizontal);
+                
+                for (let c = c1; c <= c2; c++) {
+                    if (c !== hole && !isSpecial(y, c)) {
+                        grid[y][c].isWall = true;
+                        grid[y][c].element.classList.add('wall');
+                    }
+                }
+                await recursiveDiv(r1, y - 1, c1, c2, !horizontal);
+                await recursiveDiv(y + 1, r2, c1, c2, !horizontal);
             } else {
-                if(c2 - c1 < 2) return;
+                if (c2 - c1 < 2) return;
+                // Loose logic: any random col in between
                 const x = Math.floor(Math.random() * (c2 - c1 - 1)) + c1 + 1;
                 const hole = Math.floor(Math.random() * (r2 - r1 + 1)) + r1;
-                for(let r = r1; r <= r2; r++) if(r !== hole && !isSpecial(r, x)) { grid[r][x].isWall = true; grid[r][x].element.classList.add('wall'); }
-                await recursiveDiv(r1, r2, c1, x-1, !horizontal);
-                await recursiveDiv(r1, r2, x+1, c2, !horizontal);
+
+                for (let r = r1; r <= r2; r++) {
+                    if (r !== hole && !isSpecial(r, x)) {
+                        grid[r][x].isWall = true;
+                        grid[r][x].element.classList.add('wall');
+                    }
+                }
+                await recursiveDiv(r1, r2, c1, x - 1, !horizontal);
+                await recursiveDiv(r1, r2, x + 1, c2, !horizontal);
+            }
+        }
+
+        async function generateVerticalMaze() {
+            for (let c = 1; c < COLS; c += 2) {
+                const hole = Math.floor(Math.random() * ROWS);
+                for (let r = 0; r < ROWS; r++) {
+                    if (r !== hole && !isSpecial(r, c)) {
+                        grid[r][c].isWall = true;
+                        grid[r][c].element.classList.add('wall');
+                    }
+                }
+                // Add minor jitter
+                if(c % 2 === 0) await new Promise(r => setTimeout(r, 10));
+            }
+        }
+
+        async function generateHorizontalMaze() {
+             for (let r = 1; r < ROWS; r += 2) {
+                const hole = Math.floor(Math.random() * COLS);
+                for (let c = 0; c < COLS; c++) {
+                    if (c !== hole && !isSpecial(r, c)) {
+                        grid[r][c].isWall = true;
+                        grid[r][c].element.classList.add('wall');
+                    }
+                }
+                if(r % 2 === 0) await new Promise(r => setTimeout(r, 10));
+            }
+        }
+
+        async function generateSpiral() {
+            let top = 1, bottom = ROWS - 2, left = 1, right = COLS - 2;
+            while (top <= bottom && left <= right) {
+                // Top
+                for(let c = left; c <= right; c++) { 
+                    if(c !== left + 1) addWall(top, c); 
+                }
+                top += 2;
+                await new Promise(r => setTimeout(r, 15));
+
+                // Right
+                for(let r = top - 2; r <= bottom; r++) { 
+                    if(r !== top - 1) addWall(r, right); 
+                }
+                right -= 2;
+                await new Promise(r => setTimeout(r, 15));
+
+                // Bottom
+                if(top <= bottom) {
+                    for(let c = right + 2; c >= left; c--) { 
+                        if(c !== right + 1) addWall(bottom, c); 
+                    }
+                    bottom -= 2;
+                }
+                await new Promise(r => setTimeout(r, 15));
+
+                // Left
+                if(left <= right) {
+                    for(let r = bottom + 2; r >= top; r--) { 
+                        if(r !== bottom + 1) addWall(r, left); 
+                    }
+                    left += 2;
+                }
+                await new Promise(r => setTimeout(r, 15));
             }
         }
 
         /* --- EVENTS --- */
         btnVisualize.addEventListener('click', runVisualization);
         btnClear.addEventListener('click', clearBoard);
+        btnGenMaze.addEventListener('click', generateMaze);
         initGrid();
 
     </script>
