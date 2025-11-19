@@ -30,13 +30,13 @@
             border: 1px solid #334155;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
             cursor: crosshair;
-            touch-action: none; /* Prevent scroll on touch */
+            touch-action: none;
         }
 
         .cell {
             width: var(--cell-size);
             height: var(--cell-size);
-            border: 1px solid #1e293b; /* Very subtle border */
+            border: 1px solid #1e293b;
             transition: background-color 0.05s ease, transform 0.1s;
         }
 
@@ -81,46 +81,80 @@
             animation: pathAnim 0.5s ease-out forwards;
         }
 
-        /* Animations */
-        @keyframes wallPop {
-            0% { transform: scale(0.5); }
-            100% { transform: scale(1); }
+        /* Debugger Panel */
+        #debug-panel {
+            font-family: 'Consolas', 'Monaco', monospace;
+            background-color: rgba(15, 23, 42, 0.95);
+            border: 1px solid #334155;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            transition: opacity 0.2s, transform 0.2s;
         }
+        .debug-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+        .debug-label { color: #94a3b8; }
+        .debug-val { color: #38bdf8; font-weight: bold; }
 
+        /* Slider Styling */
+        input[type=range] {
+            -webkit-appearance: none;
+            background: transparent;
+            width: 80px;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 14px;
+            width: 14px;
+            border-radius: 50%;
+            background: #22d3ee;
+            cursor: pointer;
+            margin-top: -5px; 
+            box-shadow: 0 0 5px rgba(34, 211, 238, 0.5);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #334155;
+            border-radius: 2px;
+        }
+        input[type=range]:focus { outline: none; }
+
+        /* Control Buttons in Debugger */
+        .debug-btn {
+            background: #334155;
+            border: 1px solid #475569;
+            color: #e2e8f0;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .debug-btn:hover { background: #475569; }
+        .debug-btn.active { background: #0ea5e9; color: white; border-color: #0284c7; }
+
+        /* Animations */
+        @keyframes wallPop { 0% { transform: scale(0.5); } 100% { transform: scale(1); } }
         @keyframes visitedAnim {
-            0% {
-                transform: scale(0.3);
-                background-color: rgba(76, 29, 149, 0.8);
-                border-radius: 50%;
-            }
+            0% { transform: scale(0.3); background-color: rgba(76, 29, 149, 0.8); border-radius: 50%; }
             50% { background-color: rgba(17, 104, 217, 0.6); }
             100% { transform: scale(1); background-color: var(--visited-color); }
         }
-
-        @keyframes pathAnim {
-            0% { transform: scale(0.6); }
-            100% { transform: scale(1); }
-        }
-
-        @keyframes pop {
-            0% { transform: scale(0.5); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
-        }
+        @keyframes pathAnim { 0% { transform: scale(0.6); } 100% { transform: scale(1); } }
+        @keyframes pop { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 
         /* Custom Select Styling fix */
-        select option {
-            background-color: #1e293b;
-            color: #e2e8f0;
-            padding: 10px;
-        }
+        select option { background-color: #1e293b; color: #e2e8f0; padding: 10px; }
     </style>
 </head>
 <body class="flex flex-col h-screen w-screen">
 
     <!-- Header & Controls -->
     <header class="bg-slate-900/90 border-b border-slate-800 p-3 flex flex-col gap-3 z-20 backdrop-blur-sm shadow-lg">
-        
-        <!-- Top Row: Branding + Main Controls -->
         <div class="flex flex-wrap justify-between items-center gap-4">
             <div class="flex items-center gap-2">
                 <div class="w-8 h-8 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-cyan-500/20">
@@ -133,7 +167,6 @@
             </div>
 
             <div class="flex items-center gap-2 bg-slate-800 p-1 rounded-lg border border-slate-700">
-                <!-- Algorithm Select -->
                 <div class="relative bg-slate-900 rounded overflow-hidden border border-slate-600">
                     <i class="fas fa-calculator absolute left-2 top-2 text-cyan-500 text-xs pointer-events-none"></i>
                     <select id="algo-select" class="pl-8 pr-4 py-1.5 bg-slate-900 text-xs font-medium text-slate-200 focus:outline-none focus:ring-1 focus:ring-cyan-500 cursor-pointer w-40 appearance-none">
@@ -146,23 +179,29 @@
                 </div>
                 
                 <div class="w-px h-4 bg-slate-600 mx-1"></div>
+                <div class="flex items-center gap-2 px-2" title="Animation Speed">
+                    <i class="fas fa-tachometer-alt text-slate-500 text-xs"></i>
+                    <input type="range" id="speed-slider" min="1" max="100" value="80">
+                </div>
+                <div class="w-px h-4 bg-slate-600 mx-1"></div>
 
-                <!-- Visualize Button -->
                 <button id="btn-visualize" class="bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold px-4 py-1.5 rounded transition shadow-lg shadow-cyan-900/20 flex items-center gap-2 group">
                     <i class="fas fa-play text-[10px] group-hover:scale-110 transition"></i> Visualize
                 </button>
                 
-                <!-- Clear -->
                 <button id="btn-clear" class="hover:bg-slate-700 text-slate-400 hover:text-red-400 text-xs px-3 py-1.5 rounded transition" title="Clear Board">
                     <i class="fas fa-trash-alt"></i>
+                </button>
+
+                 <button id="btn-debug" class="hover:bg-slate-700 text-slate-400 hover:text-purple-400 text-xs px-3 py-1.5 rounded transition border-l border-slate-700" title="Toggle Debug Info">
+                    <i class="fas fa-bug"></i>
                 </button>
             </div>
         </div>
 
-        <!-- Bottom Row: Maze Generation Tools -->
         <div class="flex flex-wrap items-center gap-3 justify-center md:justify-start">
             <div class="flex items-center gap-2">
-                <span class="text-xs text-slate-500 font-bold uppercase">Maze Presets:</span>
+                <span class="text-xs text-slate-500 font-bold uppercase">Presets:</span>
                 <button onclick="generateMaze('random')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded text-xs text-slate-300 transition">Random Noise</button>
                 <button onclick="generateMaze('recursive')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded text-xs text-slate-300 transition">Recursive Division</button>
             </div>
@@ -184,33 +223,65 @@
     <!-- Main Canvas -->
     <main class="flex-1 overflow-auto flex items-center justify-center bg-slate-950 p-4 relative">
         <div id="grid-container"></div>
+        
+        <!-- Debugger Panel (Hidden by default) -->
+        <div id="debug-panel" class="absolute bottom-4 right-4 w-64 rounded-lg p-4 text-xs hidden z-30">
+            <div class="flex justify-between items-center mb-3 border-b border-slate-700 pb-2">
+                <span class="text-purple-400 font-bold uppercase tracking-wider"><i class="fas fa-bug mr-1"></i> Debugger</span>
+                <div class="flex gap-1">
+                    <button id="debug-pause" class="debug-btn" title="Pause/Resume">
+                        <i class="fas fa-pause" id="pause-icon"></i>
+                    </button>
+                    <button id="debug-step" class="debug-btn" title="Step Forward">
+                        <i class="fas fa-step-forward"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="space-y-1" id="debug-content">
+                <div class="debug-row"><span class="debug-label">Status:</span> <span class="debug-val text-slate-200">Idle</span></div>
+                <div class="debug-row"><span class="debug-label">Current Node:</span> <span class="debug-val">-</span></div>
+                <div class="debug-row"><span class="debug-label">Nodes Visited:</span> <span class="debug-val">0</span></div>
+                <div class="debug-row"><span class="debug-label">G-Score (Dist):</span> <span class="debug-val">-</span></div>
+                <div class="debug-row"><span class="debug-label">H-Score (Heur):</span> <span class="debug-val">-</span></div>
+                <div class="debug-row"><span class="debug-label">F-Score (Total):</span> <span class="debug-val">-</span></div>
+            </div>
+        </div>
     </main>
 
     <script>
-        /* --- GLOBAL CONFIG --- */
+        /* --- CONFIG --- */
         const ROWS = 25;
         const COLS = 45;
         
-        let grid = []; // 2D Array
-        
-        // Interaction States
+        let grid = []; 
         let isMouseDown = false;
-        let drawWallMode = true; // true = painting walls, false = erasing walls
-        let dragNode = null; // 'start', 'end', or null
+        let drawWallMode = true;
+        let dragNode = null; 
         let isRunning = false;
+        let showDebug = false;
         
-        // Default Positions
+        // Pause/Step Logic
+        let isPaused = false;
+        let resolvePause = null;
+
         let startPos = { r: 12, c: 5 };
         let endPos = { r: 12, c: 39 };
 
-        /* --- DOM ELEMENTS --- */
+        /* --- ELEMENTS --- */
         const gridContainer = document.getElementById('grid-container');
         const statusText = document.getElementById('status-text');
         const btnVisualize = document.getElementById('btn-visualize');
         const btnClear = document.getElementById('btn-clear');
         const algoSelect = document.getElementById('algo-select');
-        
-        /* --- INITIALIZATION --- */
+        const speedSlider = document.getElementById('speed-slider');
+        const btnDebug = document.getElementById('btn-debug');
+        const debugPanel = document.getElementById('debug-panel');
+        const debugContent = document.getElementById('debug-content');
+        const btnPause = document.getElementById('debug-pause');
+        const btnStep = document.getElementById('debug-step');
+        const pauseIcon = document.getElementById('pause-icon');
+
+        /* --- INIT --- */
         function initGrid() {
             gridContainer.style.gridTemplateRows = `repeat(${ROWS}, var(--cell-size))`;
             gridContainer.style.gridTemplateColumns = `repeat(${COLS}, var(--cell-size))`;
@@ -224,19 +295,15 @@
                     cell.className = 'cell';
                     cell.dataset.r = r;
                     cell.dataset.c = c;
-                    
-                    // Event Listeners
                     cell.addEventListener('mousedown', (e) => onMouseDown(r, c, e));
                     cell.addEventListener('mouseenter', () => onMouseEnter(r, c));
-                    
                     gridContainer.appendChild(cell);
                     
                     row.push({
-                        element: cell,
-                        r, c,
+                        element: cell, r, c,
                         isWall: false,
                         distance: Infinity,
-                        totalDistance: Infinity, // f-score
+                        totalDistance: Infinity,
                         heuristic: Infinity,
                         cameFrom: null,
                         visited: false
@@ -247,50 +314,31 @@
             updateSpecialNodes();
         }
 
-        // Global Mouse Up listener to catch releases outside cells
-        window.addEventListener('mouseup', () => {
-            isMouseDown = false;
-            dragNode = null;
-        });
-        
-        // Safety: stop drawing if leaving grid
-        gridContainer.addEventListener('mouseleave', () => {
-            if(!dragNode) isMouseDown = false; 
-        });
+        window.addEventListener('mouseup', () => { isMouseDown = false; dragNode = null; });
+        gridContainer.addEventListener('mouseleave', () => { if(!dragNode) isMouseDown = false; });
 
         function updateSpecialNodes() {
-            // Clean up visual classes
             for(let r=0; r<ROWS; r++) {
                 for(let c=0; c<COLS; c++) {
                     grid[r][c].element.classList.remove('start', 'end');
                 }
             }
-            // Add classes to current positions
             grid[startPos.r][startPos.c].element.classList.add('start');
             grid[endPos.r][endPos.c].element.classList.add('end');
-            
-            // Ensure they aren't walls internally
             grid[startPos.r][startPos.c].isWall = false;
             grid[endPos.r][endPos.c].isWall = false;
             grid[startPos.r][startPos.c].element.classList.remove('wall');
             grid[endPos.r][endPos.c].element.classList.remove('wall');
         }
 
-        /* --- INPUT HANDLING --- */
+        /* --- INTERACTION --- */
         function onMouseDown(r, c, e) {
             if (isRunning) return;
             e.preventDefault();
             isMouseDown = true;
             
-            if (r === startPos.r && c === startPos.c) {
-                dragNode = 'start';
-                return;
-            } 
-            
-            if (r === endPos.r && c === endPos.c) {
-                dragNode = 'end';
-                return;
-            }
+            if (r === startPos.r && c === startPos.c) { dragNode = 'start'; return; } 
+            if (r === endPos.r && c === endPos.c) { dragNode = 'end'; return; }
 
             dragNode = null;
             drawWallMode = !grid[r][c].isWall;
@@ -299,7 +347,6 @@
 
         function onMouseEnter(r, c) {
             if (!isMouseDown || isRunning) return;
-
             if (dragNode === 'start') {
                 if (!grid[r][c].isWall && !(r === endPos.r && c === endPos.c)) {
                     startPos = { r, c };
@@ -317,21 +364,150 @@
 
         function paintWall(r, c) {
             if ((r === startPos.r && c === startPos.c) || (r === endPos.r && c === endPos.c)) return;
-
             const cell = grid[r][c];
-            
             if(cell.isWall !== drawWallMode) {
                 cell.isWall = drawWallMode;
-                if (cell.isWall) {
-                    cell.element.classList.add('wall');
-                    cell.element.classList.remove('visited', 'path');
+                cell.element.classList.toggle('wall', drawWallMode);
+                cell.element.classList.remove('visited', 'path');
+            }
+        }
+
+        /* --- DEBUGGER --- */
+        btnDebug.addEventListener('click', () => {
+            showDebug = !showDebug;
+            if(showDebug) {
+                debugPanel.classList.remove('hidden');
+                btnDebug.classList.add('text-purple-400', 'bg-slate-700');
+            } else {
+                debugPanel.classList.add('hidden');
+                btnDebug.classList.remove('text-purple-400', 'bg-slate-700');
+            }
+        });
+
+        // Pause / Play
+        btnPause.addEventListener('click', () => {
+            if (!isRunning) return;
+            isPaused = !isPaused;
+            updatePauseUI();
+            // If unpausing and stuck in await, resolve it
+            if (!isPaused && resolvePause) {
+                resolvePause(); 
+                resolvePause = null;
+            }
+        });
+
+        // Step Forward
+        btnStep.addEventListener('click', () => {
+            if (!isRunning) return;
+            if (!isPaused) {
+                // If not paused, pausing first makes sense
+                isPaused = true;
+                updatePauseUI();
+            }
+            // Resolve the wait promise once
+            if (resolvePause) {
+                resolvePause();
+                resolvePause = null;
+            }
+        });
+
+        function updatePauseUI() {
+            if (isPaused) {
+                pauseIcon.classList.remove('fa-pause');
+                pauseIcon.classList.add('fa-play');
+                btnPause.classList.add('active');
+                statusText.textContent = "Paused. Press Play to resume or Step to advance.";
+            } else {
+                pauseIcon.classList.remove('fa-play');
+                pauseIcon.classList.add('fa-pause');
+                btnPause.classList.remove('active');
+                statusText.textContent = "Running Algorithm...";
+            }
+        }
+
+        function updateDebugDisplay(node, visitedCount) {
+            if(!showDebug || !node) return;
+            const dist = node.distance === Infinity ? '∞' : node.distance;
+            const heur = node.heuristic === Infinity ? '∞' : node.heuristic;
+            const total = node.totalDistance === Infinity ? '∞' : node.totalDistance;
+
+            debugContent.innerHTML = `
+                <div class="debug-row"><span class="debug-label">Status:</span> <span class="debug-val ${isPaused ? 'text-yellow-400' : 'text-green-400'}">${isPaused ? 'Paused' : 'Running'}</span></div>
+                <div class="debug-row"><span class="debug-label">Current Node:</span> <span class="debug-val">[${node.r}, ${node.c}]</span></div>
+                <div class="debug-row"><span class="debug-label">Nodes Visited:</span> <span class="debug-val text-amber-400">${visitedCount}</span></div>
+                <div class="debug-row"><span class="debug-label">G-Score (Dist):</span> <span class="debug-val">${dist}</span></div>
+                <div class="debug-row"><span class="debug-label">H-Score (Heur):</span> <span class="debug-val">${heur}</span></div>
+                <div class="debug-row"><span class="debug-label">F-Score (Total):</span> <span class="debug-val">${total}</span></div>
+            `;
+        }
+
+        /* --- ANIMATION ENGINE --- */
+        function getSpeedDelay() {
+            // 1 (slow) -> 100 (fast)
+            const val = parseInt(speedSlider.value);
+            // Exponential curve for better control
+            // 100 -> 0ms, 1 -> 500ms
+            if(val === 100) return 0;
+            return Math.floor(500 * Math.pow(1 - (val/100), 2));
+        }
+
+        function waitStep() {
+            return new Promise(resolve => {
+                resolvePause = resolve;
+            });
+        }
+
+        async function animateVisited(nodes) {
+            for(let i=0; i<nodes.length; i++) {
+                // 1. Check Pause State
+                if(isPaused) {
+                    updateDebugDisplay(nodes[i], i); // update UI before waiting
+                    await waitStep();
+                    // After resolving, we are technically still "in the step"
+                    // Loop continues to process this node
+                }
+
+                // 2. Process Node
+                const n = nodes[i];
+                if(!isSpecial(n.r, n.c)) {
+                    n.element.classList.add('visited');
+                }
+                updateDebugDisplay(n, i + 1);
+
+                // 3. Wait based on Speed Slider (Dynamic)
+                // Note: We wait AFTER processing to allow visual update
+                const delay = getSpeedDelay();
+                if(delay > 0) {
+                     await new Promise(r => setTimeout(r, delay));
                 } else {
-                    cell.element.classList.remove('wall');
+                    // If speed is max, throttle slightly to prevent freezing only every few frames
+                    if(i % 10 === 0) await new Promise(r => setTimeout(r, 0));
                 }
             }
         }
 
-        /* --- ALGORITHMS --- */
+        async function animatePath() {
+            const path = [];
+            let curr = grid[endPos.r][endPos.c];
+            while(curr) {
+                path.unshift(curr);
+                curr = curr.cameFrom;
+            }
+            
+            // Path animation (standard speed, not affected by debug pause usually, but let's respect slider)
+            for(let i=0; i<path.length; i++) {
+                 const delay = Math.max(20, getSpeedDelay()); 
+                 const n = path[i];
+                 if(!isSpecial(n.r, n.c)) {
+                     n.element.classList.remove('visited');
+                     n.element.classList.add('path');
+                 }
+                 await new Promise(r => setTimeout(r, delay));
+            }
+            return path.length;
+        }
+
+        /* --- MAIN RUNNER --- */
         function resetAlgoState() {
             for(let r=0; r<ROWS; r++) {
                 for(let c=0; c<COLS; c++) {
@@ -344,6 +520,16 @@
                     n.element.classList.remove('visited', 'path');
                 }
             }
+            // Reset Debug UI
+            isPaused = false;
+            updatePauseUI();
+            if(showDebug) {
+                debugContent.innerHTML = `
+                    <div class="debug-row"><span class="debug-label">Status:</span> <span class="debug-val text-slate-200">Ready</span></div>
+                    <div class="debug-row"><span class="debug-label">Current Node:</span> <span class="debug-val">-</span></div>
+                    <div class="debug-row"><span class="debug-label">Total Visited:</span> <span class="debug-val">0</span></div>
+                `;
+            }
         }
 
         async function runVisualization() {
@@ -351,21 +537,22 @@
             isRunning = true;
             resetAlgoState();
             btnVisualize.disabled = true;
-            statusText.textContent = "Running Algorithm...";
+            
+            // Open debugger automatically if not open? Optional, let's leave it manual
+            // but ensure buttons are active
+            btnPause.disabled = false;
+            btnStep.disabled = false;
 
             const algo = algoSelect.value;
             let visitedNodes = [];
             
-            // Select Algo
             if (algo === 'dijkstra') visitedNodes = dijkstra();
             else if (algo === 'astar') visitedNodes = aStar();
             else if (algo === 'greedy') visitedNodes = greedy();
             else if (algo === 'dfs') visitedNodes = dfs();
 
-            // Animate Visited
             await animateVisited(visitedNodes);
 
-            // Reconstruct Path
             const endNode = grid[endPos.r][endPos.c];
             let pathFound = !!endNode.cameFrom;
             let pathLength = 0;
@@ -377,28 +564,36 @@
                 statusText.textContent = "No path possible.";
             }
 
+            // Final Debug Update
+            if(showDebug) {
+                 debugContent.innerHTML = `
+                    <div class="debug-row"><span class="debug-label">Status:</span> <span class="debug-val ${pathFound ? 'text-green-400' : 'text-red-400'}">${pathFound ? 'Success' : 'Failed'}</span></div>
+                    <div class="debug-row"><span class="debug-label">Nodes Visited:</span> <span class="debug-val text-amber-400">${visitedNodes.length}</span></div>
+                    <div class="debug-row"><span class="debug-label">Path Length:</span> <span class="debug-val">${pathLength}</span></div>
+                `;
+            }
+
             isRunning = false;
             btnVisualize.disabled = false;
+            // Reset Pause UI just in case
+            isPaused = false;
+            updatePauseUI();
         }
 
-        /* -- Algo Implementations -- */
+        /* --- ALGORITHMS --- */
         function dijkstra() {
             const visited = [];
             const start = grid[startPos.r][startPos.c];
             start.distance = 0;
             const unvisited = getAllNodes();
-
             while(unvisited.length) {
                 unvisited.sort((a,b) => a.distance - b.distance);
                 const curr = unvisited.shift();
-                
                 if (curr.isWall) continue;
                 if (curr.distance === Infinity) break;
-                
                 curr.visited = true;
                 visited.push(curr);
                 if (curr.r === endPos.r && curr.c === endPos.c) return visited;
-
                 updateUnvisitedNeighbors(curr);
             }
             return visited;
@@ -410,20 +605,15 @@
             const end = grid[endPos.r][endPos.c];
             start.distance = 0;
             start.heuristic = manhattan(start, end);
-            start.totalDistance = start.heuristic; // g+h
-            
+            start.totalDistance = start.heuristic; 
             let openSet = [start];
-
             while(openSet.length) {
                 openSet.sort((a,b) => a.totalDistance - b.totalDistance || a.heuristic - b.heuristic);
                 const curr = openSet.shift();
-
                 if(curr.visited) continue;
                 curr.visited = true;
                 visited.push(curr);
-
                 if(curr === end) return visited;
-
                 getNeighbors(curr).forEach(neighbor => {
                     if(!neighbor.visited && !neighbor.isWall) {
                         const tempG = curr.distance + 1;
@@ -446,17 +636,13 @@
             const end = grid[endPos.r][endPos.c];
             start.heuristic = manhattan(start, end);
             let openSet = [start];
-
             while(openSet.length) {
                 openSet.sort((a,b) => a.heuristic - b.heuristic);
                 const curr = openSet.shift();
-
                 if(curr.visited) continue;
                 curr.visited = true;
                 visited.push(curr);
-
                 if(curr === end) return visited;
-
                 getNeighbors(curr).forEach(neighbor => {
                     if(!neighbor.visited && !neighbor.isWall) {
                         neighbor.cameFrom = curr;
@@ -474,14 +660,12 @@
             const end = grid[endPos.r][endPos.c];
             let stack = [start];
             start.distance = 0;
-
             while(stack.length) {
                 const curr = stack.pop();
                 if(curr.visited) continue;
                 curr.visited = true;
                 visited.push(curr);
                 if(curr === end) return visited;
-
                 getNeighbors(curr).forEach(n => {
                     if(!n.visited && !n.isWall) {
                         n.cameFrom = curr;
@@ -492,7 +676,7 @@
             return visited;
         }
 
-        /* -- Algo Helpers -- */
+        /* --- HELPERS --- */
         function getAllNodes() { return grid.flat(); }
         function getNeighbors(node) {
             const {r, c} = node;
@@ -512,88 +696,31 @@
             });
         }
         function manhattan(a, b) { return Math.abs(a.r - b.r) + Math.abs(a.c - b.c); }
-
-        /* --- ANIMATION --- */
-        function animateVisited(nodes) {
-            return new Promise(resolve => {
-                const delay = nodes.length > 600 ? 4 : 10;
-                for(let i=0; i<nodes.length; i++) {
-                    setTimeout(() => {
-                        const n = nodes[i];
-                        if(!n.element.classList.contains('start') && !n.element.classList.contains('end')) {
-                            n.element.classList.add('visited');
-                        }
-                        if(i === nodes.length - 1) resolve();
-                    }, i * delay);
-                }
-                if(nodes.length === 0) resolve();
-            });
-        }
-
-        function animatePath() {
-            return new Promise(resolve => {
-                const path = [];
-                let curr = grid[endPos.r][endPos.c];
-                while(curr) {
-                    path.unshift(curr);
-                    curr = curr.cameFrom;
-                }
-                for(let i=0; i<path.length; i++) {
-                    setTimeout(() => {
-                        const n = path[i];
-                        if(!n.element.classList.contains('start') && !n.element.classList.contains('end')) {
-                            n.element.classList.remove('visited');
-                            n.element.classList.add('path');
-                        }
-                        if(i === path.length - 1) resolve(path.length);
-                    }, i * 25);
-                }
-            });
-        }
-
+        
         /* --- MAZE GENERATION --- */
-        function clearBoard() {
-            initGrid();
-            statusText.textContent = "Board Cleared.";
-        }
-
+        function clearBoard() { initGrid(); statusText.textContent = "Board Cleared."; }
         function generateMaze(type) {
             clearBoard();
             if(type === 'random') {
-                grid.flat().forEach(n => {
-                    if(Math.random() < 0.3 && !isSpecial(n.r, n.c)) {
-                        n.isWall = true;
-                        n.element.classList.add('wall');
-                    }
-                });
+                grid.flat().forEach(n => { if(Math.random() < 0.3 && !isSpecial(n.r, n.c)) { n.isWall = true; n.element.classList.add('wall'); } });
             } else if (type === 'recursive') {
                 recursiveDiv(1, ROWS-2, 1, COLS-2, false);
             }
         }
-
-        function isSpecial(r, c) {
-            return (r === startPos.r && c === startPos.c) || (r === endPos.r && c === endPos.c);
-        }
-
+        function isSpecial(r, c) { return (r === startPos.r && c === startPos.c) || (r === endPos.r && c === endPos.c); }
         async function recursiveDiv(r1, r2, c1, c2, horizontal) {
             if(horizontal) {
                 if(r2 - r1 < 2) return;
                 const y = Math.floor(Math.random() * (r2 - r1 - 1)) + r1 + 1;
                 const hole = Math.floor(Math.random() * (c2 - c1 + 1)) + c1;
-                for(let c = c1; c <= c2; c++) if(c !== hole && !isSpecial(y, c)) {
-                    grid[y][c].isWall = true;
-                    grid[y][c].element.classList.add('wall');
-                }
+                for(let c = c1; c <= c2; c++) if(c !== hole && !isSpecial(y, c)) { grid[y][c].isWall = true; grid[y][c].element.classList.add('wall'); }
                 await recursiveDiv(r1, y-1, c1, c2, !horizontal);
                 await recursiveDiv(y+1, r2, c1, c2, !horizontal);
             } else {
                 if(c2 - c1 < 2) return;
                 const x = Math.floor(Math.random() * (c2 - c1 - 1)) + c1 + 1;
                 const hole = Math.floor(Math.random() * (r2 - r1 + 1)) + r1;
-                for(let r = r1; r <= r2; r++) if(r !== hole && !isSpecial(r, x)) {
-                    grid[r][x].isWall = true;
-                    grid[r][x].element.classList.add('wall');
-                }
+                for(let r = r1; r <= r2; r++) if(r !== hole && !isSpecial(r, x)) { grid[r][x].isWall = true; grid[r][x].element.classList.add('wall'); }
                 await recursiveDiv(r1, r2, c1, x-1, !horizontal);
                 await recursiveDiv(r1, r2, x+1, c2, !horizontal);
             }
@@ -602,7 +729,6 @@
         /* --- EVENTS --- */
         btnVisualize.addEventListener('click', runVisualization);
         btnClear.addEventListener('click', clearBoard);
-        
         initGrid();
 
     </script>
